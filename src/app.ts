@@ -1,3 +1,65 @@
+// Project Type
+enum ProjectStatus {
+  Active,
+  Finished,
+}
+
+
+class Project {
+  constructor(
+    public id: string,
+    public title: string,
+    public description: string,
+    public people: number,
+    public status: ProjectStatus
+    ) {}
+  }
+  
+  // Project State Management
+  type Listener<T> = (items: T[]) => void;
+  
+  class State<T> {
+    protected listeners: Listener<T>[] = [];
+
+    addListener(listenerFn: Listener<T>) {
+      this.listeners.push(listenerFn);
+    }
+  }
+
+  class ProjectState extends State<Project>{
+  private projects: Project[] = [];
+  private static instance: ProjectState;
+
+  private constructor() {
+    super();
+  }
+
+  static getInstance() {
+    if (this.instance) {
+      return this.instance;
+    }
+    this.instance = new ProjectState();
+    return this.instance;
+  }
+
+  addProject(title: string, description: string, numPeople: number) {
+    const newProject = new Project(
+      Math.random().toString(),
+      title,
+      description,
+      numPeople,
+      ProjectStatus.Active
+    );
+    this.projects.push(newProject);
+    for (const listenerFn of this.listeners) {
+      listenerFn(this.projects.slice());
+    }
+  }
+}
+
+// Global instance with only one state
+const projectState = ProjectState.getInstance();
+
 // autobind decorator
 function autobind(_: any, _2: string, descriptor: PropertyDescriptor) {
   const originalMethod = descriptor.value;
@@ -59,37 +121,104 @@ function formValidation(validatableInput: Validatable) {
   return isValid;
 }
 
-// Project Input Class
-class ProjectInput {
-  // Template element to render in the DOM.
+// Component Base Class
+// abstract makes sure this class is only for inheritance and can't be instantiated
+abstract class Component<T extends HTMLElement, U extends HTMLElement> {
   templateElement: HTMLTemplateElement;
-  // Host element where the form from template is rendered.
-  hostElement: HTMLDivElement;
-  // The form element, taken from the template.
-  element: HTMLFormElement;
+  hostElement: T;
+  element: U;
 
+  constructor(
+    templateId: string,
+    hostElementId: string,
+    instertAtStart: boolean,
+    newElementId?: string
+  ) {
+    this.templateElement = document.getElementById(
+      templateId
+    )! as HTMLTemplateElement;
+    this.hostElement = document.getElementById(hostElementId)! as T;
+
+    const importedNode = document.importNode(
+      this.templateElement.content,
+      true
+    );
+    this.element = importedNode.firstElementChild as U;
+    if (newElementId) {
+      this.element.id = newElementId;
+    }
+
+    this.attach(instertAtStart);
+  }
+
+  private attach(insertAtBeginning: boolean) {
+    this.hostElement.insertAdjacentElement(
+      insertAtBeginning ? "afterbegin" : "beforeend",
+      this.element
+    );
+  }
+
+  // Must happen at the place where we inherit
+  abstract configure(): void;
+  abstract renderContent(): void;
+}
+
+// Project List Class
+class ProjectList extends Component<HTMLDivElement, HTMLElement> {
+  assignedProjects: Project[];
+
+  constructor(private type: "active" | "finished") {
+    super("project-list", "app", false, `${type}-projects`);
+
+    this.assignedProjects = [];
+
+    this.configure();
+    this.renderContent();
+  }
+
+  renderContent() {
+    const listId = `${this.type}-project-lists`;
+    this.element.querySelector("ul")!.id = listId;
+    this.element.querySelector("h2")!.textContent =
+      this.type.toUpperCase() + " PROJECTS";
+  }
+
+  configure() {
+    projectState.addListener((projects: Project[]) => {
+      const relevantProjects = projects.filter((prj) => {
+        if (this.type === "active") {
+          return prj.status === ProjectStatus.Active;
+        }
+        return prj.status === ProjectStatus.Finished;
+      });
+
+      this.assignedProjects = relevantProjects;
+      this.renderProjects();
+    });
+  }
+
+  private renderProjects() {
+    const listEl = document.getElementById(
+      `${this.type}-project-lists`
+    )! as HTMLUListElement;
+    listEl.innerHTML = "";
+    for (const prjItem of this.assignedProjects) {
+      const listItem = document.createElement("li");
+      listItem.textContent = prjItem.title;
+      listEl.appendChild(listItem);
+    }
+  }
+}
+
+// Project Input Class
+class ProjectInput extends Component<HTMLDivElement, HTMLFormElement> {
   // Inputs
   titleInputElement: HTMLInputElement;
   descriptionInputElement: HTMLInputElement;
   peopleInputElement: HTMLInputElement;
 
   constructor() {
-    // Selecting DOM elements.
-    this.templateElement = document.getElementById(
-      "project-input"
-    )! as HTMLTemplateElement;
-    this.hostElement = document.getElementById("app")! as HTMLDivElement;
-
-    // Grabbing the content of the template.
-    const importedNode = document.importNode(
-      this.templateElement.content,
-      true
-    );
-    // Assigning the imported node (form).
-    this.element = importedNode.firstElementChild as HTMLFormElement;
-    // Giving the form an id
-    this.element.id = "user-input";
-    // Insert form element in app div.
+    super("project-input", "app", true, "user-input");
 
     // Get acces to inputs.
     this.titleInputElement = this.element.querySelector(
@@ -101,9 +230,13 @@ class ProjectInput {
     this.peopleInputElement = this.element.querySelector(
       "#people"
     ) as HTMLInputElement;
-
     this.configure();
-    this.attach();
+  }
+  renderContent() {}
+  configure() {
+    // we bind the meaning of this inside configure, which points to the class
+    // this.element.addEventListener('submit', this.submitHandler.bind(this));
+    this.element.addEventListener("submit", this.submitHandler.bind(this));
   }
 
   private gatherUserInput(): [string, string, number] | void {
@@ -121,7 +254,6 @@ class ProjectInput {
       value: enteredDescription,
       required: true,
       minLength: 5,
-      maxLength: 7,
     };
 
     const peopleValidatable: Validatable = {
@@ -158,20 +290,12 @@ class ProjectInput {
     const userInput = this.gatherUserInput();
     if (Array.isArray(userInput)) {
       const [title, desc, people] = userInput;
-      console.log(title, desc, people);
+      projectState.addProject(title, desc, people);
       this.clearInputs();
     }
-  }
-
-  private configure() {
-    // we bind the meaning of this inside configure, which points to the class
-    // this.element.addEventListener('submit', this.submitHandler.bind(this));
-    this.element.addEventListener("submit", this.submitHandler.bind(this));
-  }
-
-  private attach() {
-    this.hostElement.insertAdjacentElement("afterbegin", this.element);
   }
 }
 
 const prjInput = new ProjectInput();
+const activeProjectList = new ProjectList("active");
+const finishedProjectList = new ProjectList("finished");
