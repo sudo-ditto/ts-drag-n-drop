@@ -14,7 +14,7 @@ label,
 input,
 textarea {
   display: block;
-  margin: 0.5rem 0;
+  margin : 0.5rem 0;
 }
 
 label {
@@ -23,26 +23,26 @@ label {
 
 input,
 textarea {
-  font: inherit;
-  padding: 0.2rem 0.4rem;
-  width: 100%;
+  font     : inherit;
+  padding  : 0.2rem 0.4rem;
+  width    : 100%;
   max-width: 30rem;
-  border: 1px solid #ccc;
+  border   : 1px solid #ccc;
 }
 
 input:focus,
 textarea:focus {
-  outline: none;
+  outline   : none;
   background: #fff5f9;
 }
 
 button {
-  font: inherit;
+  font      : inherit;
   background: #ff0062;
-  border: 1px solid #ff0062;
-  cursor: pointer;
-  color: white;
-  padding: 0.75rem 1rem;
+  border    : 1px solid #ff0062;
+  cursor    : pointer;
+  color     : white;
+  padding   : 0.75rem 1rem;
 }
 
 button:focus {
@@ -51,7 +51,7 @@ button:focus {
 
 button:hover,
 button:active {
-  background: #a80041;
+  background  : #a80041;
   border-color: #a80041;
 }
 
@@ -61,11 +61,11 @@ button:active {
 }
 
 .projects header {
-  background: #ff0062;
-  height: 3.5rem;
-  display: flex;
+  background     : #ff0062;
+  height         : 3.5rem;
+  display        : flex;
   justify-content: center;
-  align-items: center;
+  align-items    : center;
 }
 
 #finished-projects {
@@ -78,23 +78,24 @@ button:active {
 
 .projects h2 {
   margin: 0;
-  color: white;
+  color : white;
 }
 
 .projects ul {
   list-style: none;
-  margin: 0;
-  padding: 1rem;
+  margin    : 0;
+  padding   : 1rem;
 }
 
 .projects li {
   box-shadow: 1px 1px 8px rgba(0, 0, 0, 0.26);
-  padding: 1rem;
-  margin: 1rem;
+  padding   : 1rem;
+  margin    : 1rem;
+  background: white;
 }
 
 .projects li h2 {
-  color: #ff0062;
+  color : #ff0062;
   margin: 0.5rem 0;
 }
 
@@ -103,7 +104,7 @@ button:active {
 }
 
 .projects li h3 {
-  color: #575757;
+  color    : #575757;
   font-size: 1rem;
 }
 
@@ -120,8 +121,8 @@ button:active {
 }
 
 #user-input {
-  margin: 1rem;
-  padding: 1rem;
-  border: 1px solid #ff0062;
+  margin    : 1rem;
+  padding   : 1rem;
+  border    : 1px solid #ff0062;
   background: #f7f7f7;
 }
