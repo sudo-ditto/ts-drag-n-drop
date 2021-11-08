@@ -11,7 +11,7 @@
     "typescript",
     "course"
   ],
-  "author": "Maximilian Schwarzmüller",
+  "author": "Loreta Krasteva",
   "license": "ISC",
   "devDependencies": {
     "lite-server": "^2.5.4"
